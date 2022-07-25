@@ -10,6 +10,6 @@ const connectDatabase = require('./config/database')
 connectDatabase()
 
 // listening app
-app.listen(process.env.PORT || 4000 , ()=>{
+app.listen(process.env.PORT || 3000 , ()=>{
     console.log(`Server is working on Port: ${process.env.PORT}`)
 })
