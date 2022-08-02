@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 const userModel = new mongoose.Schema({
     name: {
@@ -17,8 +19,8 @@ const userModel = new mongoose.Schema({
     password: {
         type: String,
         required: [true, "Please enter your password"],
-        minLength: [4, "Password should have more than 8 characters"],
-        seclect: false
+        minLength: [8, "Password should have more than 8 characters"],
+        select: false
     },
     avatar: {
         public_ID: {
@@ -38,5 +40,32 @@ const userModel = new mongoose.Schema({
     resetPasswordExpire : Date
 
 })
+
+// for bcrypting password
+
+userModel.pre("save", async function(next){
+    // if user just update name and email but not password so password is already bcrypt and it will also update hash password so for thatwe make this  
+    if(!this.isModified('password')){
+        next()
+    }
+    this.password = await bcrypt.hash(this.password,10)
+})
+
+// for JWTToken
+
+userModel.methods.getJWTToken = function(){
+    return jwt.sign({id:this._id}, process.env.JWT_SECRET,{
+        expiresIn: process.env.JWT_EXPIRY
+    })
+}
+
+// password comparision
+
+userModel.methods.comparePassword = async function(password){
+    return await bcrypt.compare(password,this.password)
+}
+
+
+
 
 module.exports = mongoose.model('users', userModel)
