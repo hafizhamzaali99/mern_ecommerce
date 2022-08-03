@@ -1,5 +1,6 @@
 const User = require('../models/userModel')
 const handleAsyncError = require('../middleware/handleAsyncError')
+const getToken = require('../utils/jwtToken')
 
 exports.createUser = handleAsyncError(async (req, res, next) => {
     const { name, email, password } = req.body
@@ -11,12 +12,8 @@ exports.createUser = handleAsyncError(async (req, res, next) => {
         }
     })
 
-    const token = user.getJWTToken()
+    getToken(user,201,res)
 
-    res.status(201).json({
-        success: true,
-        token
-    })
 })
 
 //login user
@@ -33,11 +30,11 @@ exports.loginUser = handleAsyncError(async (req, res) => {
     }
 
     const user = await User.findOne({ email }).select('+password')
-
+    // console.log(user)
     if (!user) {
         res.status(401).json({
             success: false,
-            message: "'Invalid email and password'"
+            message: "Invalid email and password"
         })
     }
 
@@ -46,14 +43,28 @@ exports.loginUser = handleAsyncError(async (req, res) => {
     if (!isPasswordMatched) {
         res.status(401).json({
             success: false,
-            message: "'Invalid email and password'"
+            message: "Invalid email and password"
         })
     }
+    getToken(user,200,res)
+    // let token_options = getToken(user);
+    // token = token_options[0];
+    // options = token_options[1];
 
-    const token = user.getJWTToken()
+    // // res.cookie('token',token, options).status(200).json({
+    // //     success: true,
+    // //     user
+    // // })
+    // res.cookie('token',token, options).status(204).json({"message": "lol"})
 
+})
+
+// for logout user
+
+exports.logoutUser = handleAsyncError(async(req,res,next)=>{
+    res.clearCookie('token');
     res.status(200).json({
-        success: true,
-        token
+        success:true,
+        message:"Logout successfully"
     })
 })
