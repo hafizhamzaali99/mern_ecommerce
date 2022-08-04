@@ -6,6 +6,7 @@ const handleAsyncError = require('../middleware/handleAsyncError')
 // create new product
 
 exports.createProduct = handleAsyncError(async (req, res,next)=>{ //using Async Error handler instead of crashing app
+    req.body.user = req.user.id
     const product = await Product.create(req.body)
     res.status(200).json({
         success:true,
