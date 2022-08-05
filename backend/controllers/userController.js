@@ -68,3 +68,48 @@ exports.logoutUser = handleAsyncError(async(req,res,next)=>{
         message:"Logout successfully"
     })
 })
+
+// for reset password 
+
+exports.forgotPassword = handleAsyncError(async(req,res,next)=>{
+    const user = await User.findOne({email:req.body.email})
+    if(!user){
+        return(
+            res.status(404).json({
+                success:false,
+                message:"User not found"
+            })
+        )
+    }
+    const resetToken = user.getResetPasswordToken()
+    console.log(resetToken)
+
+    await user.save({validateBeforeSave:false})
+
+    //link to send in email 
+
+    const resetUrl = `${req.protocol}://${req.get("host")}/api/v1/password/reset/${resetToken}`
+    // message to send in email 
+
+    const message = `Your password reset token is \n\n if you have not requested this email then, please ignore it`
+
+    try {
+        await sendEmail({
+            email:req.user.email,
+            subject:"E-com Reset Password",
+            message
+        })
+        res.status(200).json({
+            success:true,
+            message:`Email send to ${user.email} successfully`
+        })
+    } catch (error) {
+        user.resetPasswordToken = undefined
+        user.resetPasswordExpire = undefined
+        user.save({validateBeforeSave:false})
+        return(
+            res.status(500).json(error.message)
+        )
+    }
+     
+})
