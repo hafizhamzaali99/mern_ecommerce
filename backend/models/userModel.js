@@ -34,51 +34,54 @@ const userModel = new mongoose.Schema({
             required: true
         }
     },
-    
-    role:{
-        type:String,
-        default:"user",
+
+    role: {
+        type: String,
+        default: "user",
     },
-    resetPasswordToken : String,
-    resetPasswordExpire : Date
+    resetPasswordToken: String,
+    resetPasswordExpire: Date
 
 })
 
 // for bcrypting password
 
-userModel.pre("save", async function(next){
+userModel.pre("save", async function (next) {
     // if user just update name and email but not password so password is already bcrypt and it will also update hash password so for thatwe make this  
-    if(!this.isModified('password')){
+    if (!this.isModified('password')) {
         next()
     }
-    this.password = await bcrypt.hash(this.password,10)
+    this.password = await bcrypt.hash(this.password, 10)
 })
 
 // for JWTToken
 
-userModel.methods.getJWTToken = function(){
-    return jwt.sign({id:this._id}, process.env.JWT_SECRET,{
+userModel.methods.getJWTToken = function () {
+    return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRY
     })
 }
 
 // password comparision
 
-userModel.methods.comparePassword = async function(password){
-    return await bcrypt.compare(password,this.password)
+userModel.methods.comparePassword = async function (password) {
+    return await bcrypt.compare(password, this.password)
 }
 
 // generating reset password token with crypto
 
-userModel.methods.getResetPasswordToken = function(){
-    
-    const resetToken = crypto.randomBytes(20).toString('hex')
-    const cryptoToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+userModel.methods.getResetPasswordToken = function () {
 
-    this.resetPasswordExpire = Date.now() + 15 *60 *1000
-    console.log(cryptoToken)
+    const resetToken = crypto.randomBytes(20).toString('hex')
+    this.resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex')
+
+    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000
+    // console.log(cryptoToken)
     return resetToken;
-    
+
 }
 
 

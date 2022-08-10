@@ -1,19 +1,20 @@
 const nodeMailer = require('nodemailer')
-const handleAsyncError = require('../middleware/handleAsyncError')
 
-const sendEmail = handleAsyncError(async (req, res, next) => {
-    let transporter = nodemailer.createTransport({
-        service: 'gmail',
+const sendEmail = async(options)=> {
+    let transporter = nodeMailer.createTransport({
+        service: process.env.MAIL_SERVICE,
         auth: {
             user: process.env.MAIL_USERNAME,
             pass: process.env.MAIL_PASSWORD,
         }
     });
     let info = await transporter.sendMail({
-        from: "",
-        to: "bar@example.com, baz@example.com", // list of receivers
-        subject: "Hello ✔", // Subject line
-        text: "Hello world?", // plain text body
-        html: "<b>Hello world?</b>", // html body
+        from: process.env.MAIL_USERNAME,
+        to: options.email, // email of receivers
+        subject: options.subject, // Subject line
+        text: options.subject, // plain text body
     });
-})
+    // await transporter.sendMail(info)
+}
+
+module.exports = sendEmail;
