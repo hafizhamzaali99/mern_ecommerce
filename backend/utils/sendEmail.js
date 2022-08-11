@@ -12,7 +12,7 @@ const sendEmail = async(options)=> {
         from: process.env.MAIL_USERNAME,
         to: options.email, // email of receivers
         subject: options.subject, // Subject line
-        text: options.subject, // plain text body
+        text: options.message, // plain text body
     });
     // await transporter.sendMail(info)
 }
