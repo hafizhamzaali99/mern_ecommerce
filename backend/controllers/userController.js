@@ -3,6 +3,7 @@ const handleAsyncError = require('../middleware/handleAsyncError')
 const getToken = require('../utils/jwtToken')
 const sendEmail = require('../utils/sendEmail')
 const crypto = require('crypto')
+const ErrorHandler = require('../utils/errorHandler')
 
 
 
@@ -14,6 +15,8 @@ exports.createUser = handleAsyncError(async (req, res, next) => {
             public_ID: "this is profile id",
             url: "profilepicurl"
         }
+    }).catch((err) => {
+        next( new ErrorHandler(404, err.message) )
     })
 
     getToken(user, 201, res)
@@ -123,10 +126,15 @@ exports.forgotPassword = handleAsyncError(async (req, res, next) => {
 
 exports.resetPassword = handleAsyncError(async (req, res, next) => {
     const token = req.params.token
+    console.log(token)
+    //first hashing token with crypto
     const resetPasswordToken = crypto
         .createHash('sha256')
         .update(token)
         .digest('hex')
+
+    console.log(resetPasswordToken)
+    //finding user with token 
     const user = await User.findOne({
         resetPasswordToken,
         resetPasswordExpire: { $gt: Date.now() }
@@ -137,6 +145,8 @@ exports.resetPassword = handleAsyncError(async (req, res, next) => {
             message: "Reset password token is invalid or expire"
         })
     }
+
+    //to check that user enter same password and confirm password
     if (req.body.password !== req.body.confirmPassword) {
         res.status(404).json({
             success: false,
@@ -144,10 +154,13 @@ exports.resetPassword = handleAsyncError(async (req, res, next) => {
         })
     }
 
+    // if user found by checking with token in database  and pass and confPass alsom same then set pass to database and empty the resetPassword Token and expire field 
     user.password = req.body.password
     user.resetPasswordToken = undefined
     user.resetPasswordExpire = undefined
-    await user.save()
 
-    getToken(user,200,res)
+    // to save the document
+    await user.save()
+    //after change password login user by sending token in cookie
+    getToken(user, 200, res)
 })
