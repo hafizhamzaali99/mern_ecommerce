@@ -164,3 +164,13 @@ exports.resetPassword = handleAsyncError(async (req, res, next) => {
     //after change password login user by sending token in cookie
     getToken(user, 200, res)
 })
+
+// get user details
+
+exports.getUserDetails = handleAsyncError( async (req,res,next)=>{
+    const user = await User.findById(req.user.id) 
+    res.status(200).json({
+        succes:true,
+        user
+    })
+})
