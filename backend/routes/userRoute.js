@@ -10,6 +10,7 @@ router.route('/user/forgot').post(forgotPassword)
 router.route('/user/reset/:token').put(resetPassword)
 router.route('/user/logout').post(logoutUser)
 router.route('/user/me').get(isAuthenticatedUser,getUserDetails)
+router.route('/user/update').put(isAuthenticatedUser,getUserDetails)
 
 module.exports = router;
 
