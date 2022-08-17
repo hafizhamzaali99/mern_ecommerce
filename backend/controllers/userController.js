@@ -174,3 +174,34 @@ exports.getUserDetails = handleAsyncError( async (req,res,next)=>{
         user
     })
 })
+
+
+// update user password
+
+exports.updatePassword = handleAsyncError( async (req,res,next)=>{
+    const user = await User.findById(req.user.id).select('+password')
+    const isPasswordMatched = await user.comparePassword(req.body.oldPassword)
+
+    if (!isPasswordMatched) {
+        res.status(400).json({
+            success: false,
+            message: "Old password is invalid"
+        })
+    }
+    if(req.body.newPassword !== req.body.confirmPassword){
+        res.status(400).json({
+            success: false,
+            message: "Password does not match"
+        })
+    }
+    if(user.password == req.body.newPassword){
+        res.status(400).json({
+            success: false,
+            message: "please enter a different password"
+        })
+    }
+    user.password = req.body.newPassword
+    await user.save()
+
+    getToken(user,200,res)
+})
