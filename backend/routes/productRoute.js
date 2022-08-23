@@ -5,8 +5,16 @@ const router = express.Router()
 
 // router.route('/products',isAuthenticatedUser)
 router.route('/products').get(getAllproducts)
+
 router.route('/product/:key').get(searchProduct)
-router.route('/product/new').post(isAuthenticatedUser,authorizeRole('admin'), createProduct)
-router.route('/product/:id').put(isAuthenticatedUser, authorizeRole('admin'), updateProduct).delete(isAuthenticatedUser,authorizeRole('admin'), deleteProduct).get(productDetail)
+
+router.route('/admin/product/new')
+    .post(isAuthenticatedUser,authorizeRole('admin'), createProduct)
+
+router.route('/admin/product/:id')
+    .put(isAuthenticatedUser, authorizeRole('admin'), updateProduct)
+    .delete(isAuthenticatedUser,authorizeRole('admin'), deleteProduct)
+    
+router.route('/product/:id').get(productDetail)
 
 module.exports = router;

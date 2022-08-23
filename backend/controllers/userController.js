@@ -154,6 +154,7 @@ exports.resetPassword = handleAsyncError(async (req, res, next) => {
         })
     }
 
+
     // if user found by checking with token in database  and pass and confPass alsom same then set pass to database and empty the resetPassword Token and expire field 
     user.password = req.body.password
     user.resetPasswordToken = undefined
@@ -165,7 +166,7 @@ exports.resetPassword = handleAsyncError(async (req, res, next) => {
     getToken(user, 200, res)
 })
 
-// get user details
+// get user details (own)
 
 exports.getUserDetails = handleAsyncError( async (req,res,next)=>{
     const user = await User.findById(req.user.id) 
@@ -179,7 +180,10 @@ exports.getUserDetails = handleAsyncError( async (req,res,next)=>{
 // update user password
 
 exports.updatePassword = handleAsyncError( async (req,res,next)=>{
+    // firstly find user with id which is save in req.user.id on the auth function  
     const user = await User.findById(req.user.id).select('+password')
+
+    // after compare user password and req.body.oldPassword
     const isPasswordMatched = await user.comparePassword(req.body.oldPassword)
 
     if (!isPasswordMatched) {
@@ -194,6 +198,7 @@ exports.updatePassword = handleAsyncError( async (req,res,next)=>{
             message: "Password does not match"
         })
     }
+    // to check save password and new password is not same 
     if(user.password == req.body.newPassword){
         res.status(400).json({
             success: false,
@@ -201,7 +206,101 @@ exports.updatePassword = handleAsyncError( async (req,res,next)=>{
         })
     }
     user.password = req.body.newPassword
+    
+    // to save user information in document
     await user.save()
 
     getToken(user,200,res)
 })
+
+
+// update user profile
+
+exports.updateProfile = handleAsyncError( async (req,res,next)=>{
+    // const getNewData = {
+    //     name:req.body.name,
+    //     email:req.body.email,
+    // }
+    const {name,email} = req.body
+    // firstly find user with id which is save in req.user.id on the auth function  
+    const user = await User.findByIdAndUpdate(req.user.id,{name,email},{
+        new:true,
+        runValidators:true,
+        useFindAndModify:false
+    })
+    res.status(200).json({
+        success: true,
+        user
+    })
+})
+
+// get all user (admin)
+
+exports.getAllUsers = handleAsyncError(async (req, res,next)=>{
+    const users = await User.find()
+    if(!users){
+        return res.status(404).json({
+            success: false,
+            message: "User not found"
+        })
+    }
+    res.status(200).json({
+        success: true,
+        users
+    })
+})  
+// get single user (admin)
+
+exports.getSingleUser = handleAsyncError(async (req, res,next)=>{
+    const user = await User.findById(req.params.id)
+    if(!user){
+        return res.status(404).json({
+            success: false,
+            message: "User not found"
+        })
+    }
+    res.status(200).json({
+        success: true,
+        user
+    })
+})  
+
+// update profile (admin)
+
+exports.updateUserProfile = handleAsyncError( async (req,res,next)=>{
+    // const getNewData = {
+    //     name:req.body.name,
+    //     email:req.body.email,
+    // }
+    const {name,email,role} = req.body
+    const user = await User.findByIdAndUpdate(req.params.id,{name,email,role},{
+        new:true,
+        runValidators:true,
+        useFindAndModify:false
+    })
+    res.status(200).json({
+        success: true,
+        user
+    })
+})
+
+// delete user profile admin
+
+exports.deleteUserProfile = handleAsyncError( async (req,res,next)=>{
+
+    const user = await User.findById(req.params.id)
+    if(!user){
+        return res.status(404).json({
+            success: false,
+            message: "User does not exist"
+        })
+    }
+    await user.remove()
+
+    res.status(200).json({
+        success: true,
+        message:"User has been successfully deleted"
+    })
+})
+
+// PRODUCT REVIEWS FUNCTION REMAINING
